@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment / secrets (never commit real secrets; .env.example IS committed)
+.env
+**/.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+*.pem
+*.key
+
+# Standards file holds real secrets (section 4)
+se_standards_md_pack/02-env-and-secrets-standards.md
+
+# Build output
+**/dist/
+frontend/dist/
+
+# Logs
+logs/
+**/logs/
+*.log
+
+# OS
+.DS_Store

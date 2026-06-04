@@ -1,0 +1,21 @@
+{
+  "name": "fes-backend",
+  "version": "1.0.0",
+  "description": "Fire Extinguisher Management System — microservices backend (TZW LTD)",
+  "private": true,
+  "scripts": {
+    "seed": "node seed/seed.js",
+    "start:auth": "node services/auth-service/src/server.js",
+    "start:user": "node services/user-service/src/server.js",
+    "start:extinguisher": "node services/extinguisher-service/src/server.js",
+    "start:inspection": "node services/inspection-service/src/server.js",
+    "start:reporting": "node services/reporting-service/src/server.js",
+    "start:notification": "node services/notification-service/src/server.js",
+    "start:gateway": "node gateway/src/server.js",
+    "start:all": "concurrently -k -n auth,user,ext,insp,report,notif,gateway -c blue,cyan,green,magenta,yellow,red,white \"npm:start:auth\" \"npm:start:user\" \"npm:start:extinguisher\" \"npm:start:inspection\" \"npm:start:reporting\" \"npm:start:notification\" \"npm:start:gateway\"",
+    "dev:all": "concurrently -k -n auth,user,ext,insp,report,notif,gateway,web -c blue,cyan,green,magenta,yellow,red,white,gray \"npm:start:auth\" \"npm:start:user\" \"npm:start:extinguisher\" \"npm:start:inspection\" \"npm:start:reporting\" \"npm:start:notification\" \"npm:start:gateway\" \"npm --prefix frontend run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

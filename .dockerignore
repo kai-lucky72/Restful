@@ -1,0 +1,12 @@
+**/node_modules
+**/logs
+**/*.log
+**/startup.*.log
+frontend
+postman
+se_standards_md_pack
+.git
+.gitignore
+*.md
+.env.example
+**/.env.example

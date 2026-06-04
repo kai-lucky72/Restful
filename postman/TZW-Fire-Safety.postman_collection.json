@@ -1,0 +1,204 @@
+{
+  "info": {
+    "name": "TZW Fire Safety RESTful Microservices",
+    "description": "Operational API collection for auth, users, extinguishers, inspections, reporting, exports, and notifications through the API gateway.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{TOKEN}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "POST - Register User Validation",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"Facility\",\n  \"lastName\": \"User\",\n  \"email\": \"facility-user-{{$timestamp}}@tzw.rw\",\n  \"password\": \"User123!\",\n  \"confirmPassword\": \"User123!\",\n  \"termsAccepted\": true\n}" },
+            "url": "{{BASE_URL}}/auth/register"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status code is 201', () => pm.response.to.have.status(201));",
+            "pm.test('Returns safe JSON shape', () => pm.expect(pm.response.json()).to.have.property('success'));"
+          ] } }]
+        },
+        {
+          "name": "POST - Login Admin",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+                "const json = pm.response.json();",
+                "pm.test('Success is true', () => pm.expect(json.success).to.eql(true));",
+                "pm.environment.set('TOKEN', json.data.accessToken);",
+                "pm.environment.set('REFRESH_TOKEN', json.data.refreshToken);",
+                "pm.environment.set('USER_ID', json.data.user.id);"
+              ]
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@tzw.rw\",\n  \"password\": \"Admin123!\"\n}" },
+            "url": "{{BASE_URL}}/auth/login"
+          }
+        },
+        {
+          "name": "POST - Invalid Login",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@tzw.rw\",\n  \"password\": \"wrong\"\n}" },
+            "url": "{{BASE_URL}}/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status code is 401', () => pm.response.to.have.status(401));",
+            "pm.test('Safe error shape', () => pm.expect(pm.response.json().success).to.eql(false));"
+          ] } }]
+        },
+        {
+          "name": "POST - Forgot Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"not-a-real-user@example.invalid\"\n}" },
+            "url": "{{BASE_URL}}/auth/forgot-password"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+            "const json = pm.response.json();",
+            "pm.test('Safe generic success response', () => {",
+            "  pm.expect(json.success).to.eql(true);",
+            "  pm.expect(json.data.sent).to.eql(true);",
+            "});"
+          ] } }]
+        },
+        {
+          "name": "POST - Reset Password Invalid Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"invalid-reset-token\",\n  \"newPassword\": \"NewPass123!\"\n}" },
+            "url": "{{BASE_URL}}/auth/reset-password"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status code is 400', () => pm.response.to.have.status(400));",
+            "pm.test('Safe error shape', () => pm.expect(pm.response.json().success).to.eql(false));"
+          ] } }]
+        },
+        {
+          "name": "POST - Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{REFRESH_TOKEN}}\"\n}" },
+            "url": "{{BASE_URL}}/auth/refresh"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+            "const json = pm.response.json();",
+            "pm.environment.set('TOKEN', json.data.accessToken);"
+          ] } }]
+        },
+        {
+          "name": "GET - Current User",
+          "request": { "method": "GET", "url": "{{BASE_URL}}/auth/me" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status code is 200', () => pm.response.to.have.status(200));"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "Extinguishers",
+      "item": [
+        {
+          "name": "POST - Create Extinguisher",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"serialNumber\": \"FE-POSTMAN-001\",\n  \"location\": \"Kigali HQ - Floor 1\",\n  \"type\": \"CO2\",\n  \"size\": \"5_LB\",\n  \"installationDate\": \"2026-06-03\",\n  \"expiryDate\": \"2027-06-03\"\n}" },
+            "url": "{{BASE_URL}}/extinguishers"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Created or duplicate handled', () => pm.expect([201,409]).to.include(pm.response.code));",
+            "const json = pm.response.json();",
+            "if (json.success && json.data?.id) pm.environment.set('EXTINGUISHER_ID', json.data.id);"
+          ] } }]
+        },
+        {
+          "name": "GET - List Extinguishers Paginated",
+          "request": { "method": "GET", "url": "{{BASE_URL}}/extinguishers?page=1&limit=10&search=FE" },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Status code is 200', () => pm.response.to.have.status(200));",
+            "pm.test('Has pagination meta', () => pm.expect(pm.response.json()).to.have.property('meta'));"
+          ] } }]
+        },
+        {
+          "name": "GET - One Extinguisher",
+          "request": { "method": "GET", "url": "{{BASE_URL}}/extinguishers/{{EXTINGUISHER_ID}}" }
+        }
+      ]
+    },
+    {
+      "name": "Inspections & Maintenance",
+      "item": [
+        {
+          "name": "POST - Schedule Inspection",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"extinguisherId\": \"{{EXTINGUISHER_ID}}\",\n  \"scheduledDate\": \"2026-06-10\",\n  \"scheduledTime\": \"09:30\",\n  \"notes\": \"Postman operations schedule test\"\n}" },
+            "url": "{{BASE_URL}}/inspections"
+          },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": [
+            "pm.test('Scheduled or validation/conflict response', () => pm.expect([201,400,409]).to.include(pm.response.code));",
+            "const json = pm.response.json();",
+            "if (json.success && json.data?.id) pm.environment.set('INSPECTION_ID', json.data.id);"
+          ] } }]
+        },
+        {
+          "name": "GET - List Inspections",
+          "request": { "method": "GET", "url": "{{BASE_URL}}/inspections?page=1&limit=10" }
+        },
+        {
+          "name": "POST - Log Maintenance",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"extinguisherId\": \"{{EXTINGUISHER_ID}}\",\n  \"actionTaken\": \"Pressure gauge checked\",\n  \"maintenanceDate\": \"2026-06-03\",\n  \"issuesIdentified\": \"None\",\n  \"notes\": \"Routine postman test\"\n}" },
+            "url": "{{BASE_URL}}/inspections/maintenance"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        { "name": "GET - Dashboard Report", "request": { "method": "GET", "url": "{{BASE_URL}}/reports/dashboard" } },
+        { "name": "GET - Inventory Report", "request": { "method": "GET", "url": "{{BASE_URL}}/reports/inventory" } },
+        { "name": "GET - Compliance Report", "request": { "method": "GET", "url": "{{BASE_URL}}/reports/compliance" } },
+        { "name": "GET - Export Inventory CSV", "request": { "method": "GET", "url": "{{BASE_URL}}/reports/export?type=inventory&format=csv" } },
+        { "name": "GET - Export Inventory PDF", "request": { "method": "GET", "url": "{{BASE_URL}}/reports/export?type=inventory&format=pdf" } }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        { "name": "GET - List Notifications", "request": { "method": "GET", "url": "{{BASE_URL}}/notifications?limit=8" } },
+        { "name": "GET - Unread Count", "request": { "method": "GET", "url": "{{BASE_URL}}/notifications/unread-count" } },
+        { "name": "PATCH - Mark All Read", "request": { "method": "PATCH", "url": "{{BASE_URL}}/notifications/read-all" } }
+      ]
+    }
+  ]
+}
