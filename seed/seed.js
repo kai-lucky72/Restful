@@ -15,8 +15,6 @@ const bcrypt = require(path.join(authNM, 'bcryptjs'));
 
 const DB = {
   database: process.env.DB_NAME || 'fire_extinguisher_db',
-  username: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'lucky',
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT, 10) || 5432,
 };
